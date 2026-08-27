@@ -10,6 +10,7 @@
 - [Intersecting Geometries (ST_DWithin)](#intersecting-geometries-stdwithin)
 - [Calculate Area](#calculate-area)
 - [Putting It All Together](#putting-it-all-together)
+- [Trigger on Insert](#trigger-on-insert)
 - [Cheat Sheet](#cheat-sheet)
 
 ## Basic SQL
@@ -120,5 +121,27 @@ JOIN boundaries b
   ON ST_Within(s.geom, b.geom);
 ```
 
+## Trigger on Insert
+Automatically set a `status` column based on the inserted `measurement` value.
+
+```sql
+CREATE OR REPLACE FUNCTION set_site_status()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.measurement > 10 THEN
+    NEW.status := 'high';
+  ELSE
+    NEW.status := 'normal';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_set_site_status
+BEFORE INSERT ON sites
+FOR EACH ROW
+EXECUTE FUNCTION set_site_status();
+```
+
 ## Cheat Sheet
-- `SELECT`, `WITH`, `UPPER`, `metadata->>'key'`, `INSERT`, `ST_SetSRID`, `ST_MakePoint`, `ST_GeomFromText`, `ST_Within`, `ST_DWithin`, `ST_Area`
+- `SELECT`, `WITH`, `UPPER`, `metadata->>'key'`, `INSERT`, `ST_SetSRID`, `ST_MakePoint`, `ST_GeomFromText`, `ST_Within`, `ST_DWithin`, `ST_Area`, `CREATE TRIGGER`, `CREATE OR REPLACE FUNCTION`
